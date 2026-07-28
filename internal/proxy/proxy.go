@@ -37,11 +37,8 @@ func (gp *GatewayProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer gp.balancer.MarkDone(backend)
 
 		start := time.Now()
-		director := func(req *http.Request) {
-			backend.Director(req)
-		}
 		proxy := &httputil.ReverseProxy{
-			Director:  director,
+			Director:  backend.Director,
 			Transport: http.DefaultTransport,
 			ModifyResponse: func(resp *http.Response) error {
 				elapsed := time.Since(start).Seconds()

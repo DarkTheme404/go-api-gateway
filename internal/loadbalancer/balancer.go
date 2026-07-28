@@ -25,7 +25,6 @@ type Balancer interface {
 type RoundRobinBalancer struct {
 	backends []*Backend
 	current  uint64
-	mu       sync.Mutex
 }
 
 func NewRoundRobin(backends []*Backend) *RoundRobinBalancer {
@@ -35,6 +34,8 @@ func NewRoundRobin(backends []*Backend) *RoundRobinBalancer {
 	return &RoundRobinBalancer{backends: backends}
 }
 
+// Next выбирает следующий бэкенд по кругу, пропуская нездоровые.
+// Используем атомарный счётчик вместо мьютекса для минимальной задержки.
 func (rb *RoundRobinBalancer) Next() (*httputil.ReverseProxy, error) {
 	if len(rb.backends) == 0 {
 		return nil, ErrNoBackends
@@ -82,6 +83,8 @@ func NewLeastConnections(backends []*Backend) *LeastConnectionsBalancer {
 	return &LeastConnectionsBalancer{backends: backends}
 }
 
+// Next выбирает бэкенд с наименьшим числом активных соединений.
+// Подходит для длинных запросов (websocket, streaming).
 func (lb *LeastConnectionsBalancer) Next() (*httputil.ReverseProxy, error) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()

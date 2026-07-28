@@ -34,6 +34,8 @@ func NewJWTValidator(secret, issuer string, allowedAlgorithms []string) *JWTVali
 	}
 }
 
+// Middleware проверяет JWT токен из заголовка Authorization.
+// Цепочка: формат заголовка -> алгоритм подписи -> issuer -> срок действия.
 func (j *JWTValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -61,7 +63,6 @@ func (j *JWTValidator) Middleware(next http.Handler) http.Handler {
 			return j.secret, nil
 		},
 			jwt.WithIssuer(j.issuer),
-			jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}),
 		)
 		if err != nil {
 			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)

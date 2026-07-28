@@ -35,6 +35,8 @@ func NewLimiter(rate float64, burst int) *Limiter {
 }
 
 // Allow проверяет, разрешён ли запрос для данного клиента.
+// Алгоритм token bucket: при каждом запросе токены пополняются
+// пропорционально прошедшему времени, затем消費ляется один токен.
 func (l *Limiter) Allow(clientID string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -50,7 +52,7 @@ func (l *Limiter) Allow(clientID string) bool {
 		l.clients[clientID] = client
 	}
 
-	// Пополняем токены
+	// Пополняем токены пропорционально прошедшему времени, но не больше burst
 	elapsed := now.Sub(client.lastTime).Seconds()
 	client.tokens += elapsed * l.rate
 	if client.tokens > float64(l.burst) {
@@ -58,7 +60,6 @@ func (l *Limiter) Allow(clientID string) bool {
 	}
 	client.lastTime = now
 
-	// Пытаемся взять токен
 	if client.tokens >= 1 {
 		client.tokens--
 		return true

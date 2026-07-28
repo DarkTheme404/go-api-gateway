@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -122,5 +121,4 @@ func main() {
 		sugar.Fatalf("forced shutdown: %v", err)
 	}
 	sugar.Info("gateway stopped")
-	log.Println("gateway stopped")
 }

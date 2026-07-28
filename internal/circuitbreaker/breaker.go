@@ -59,6 +59,12 @@ func New(threshold int, timeout time.Duration) *CircuitBreaker {
 	}
 }
 
+// Execute выполняет fn через circuit breaker.
+//
+// Состояния:
+//   Closed — все запросы проходят, считаем ошибки
+//   Open — запросы отклоняются, ждём timeout
+//   HalfOpen — пропускаем один тестовый запрос для проверки
 func (cb *CircuitBreaker) Execute(fn func() error) error {
 	cb.mu.Lock()
 	state := cb.state
